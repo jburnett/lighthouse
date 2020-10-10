@@ -5,13 +5,13 @@ name = "account_manager"
 version = "0.3.0"
 dependencies = [
  "account_utils",
- "bls",
+ "bls 0.2.0",
  "clap",
  "clap_utils",
  "deposit_contract",
  "directory",
  "dirs 3.0.1",
- "environment",
+ "environment 0.1.2",
  "eth2_keystore",
  "eth2_ssz",
  "eth2_ssz_derive",
@@ -350,6 +350,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 
 [[package]]
+name = "backend"
+version = "0.1.0"
+source = "git+https://github.com/sigp/rust-bls-remote-signer?rev=ed96121b2d7c09dc4c68d8a38c6667f8295ab590#ed96121b2d7c09dc4c68d8a38c6667f8295ab590"
+dependencies = [
+ "bls 0.2.0 (git+https://github.com/sigp/lighthouse?tag=v0.2.13)",
+ "clap",
+ "ethereum-types",
+ "hex 0.4.2",
+ "lazy_static",
+ "regex",
+ "slog",
+ "zeroize",
+]
+
+[[package]]
 name = "backtrace"
 version = "0.3.51"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -396,10 +411,10 @@ name = "beacon_chain"
 version = "0.2.0"
 dependencies = [
  "bitvec 0.19.3",
- "bls",
+ "bls 0.2.0",
  "bus",
  "derivative",
- "environment",
+ "environment 0.1.2",
  "eth1",
  "eth2_config",
  "eth2_hashing",
@@ -452,11 +467,11 @@ dependencies = [
  "beacon_chain",
  "clap",
  "clap_utils",
- "client",
+ "client 0.2.0",
  "ctrlc",
  "directory",
  "dirs 3.0.1",
- "environment",
+ "environment 0.1.2",
  "eth2_config",
  "eth2_libp2p",
  "eth2_ssz",
@@ -613,6 +628,25 @@ name = "block-padding"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8d696c370c750c948ada61c69a0ee2cbbb9c50b1019ddb86d9317157a99c2cae"
+
+[[package]]
+name = "bls"
+version = "0.2.0"
+source = "git+https://github.com/sigp/lighthouse?tag=v0.2.13#c0e76d2c15db499b6f901ac9e7e358bd0d4a8d89"
+dependencies = [
+ "blst",
+ "eth2_hashing",
+ "eth2_ssz",
+ "ethereum-types",
+ "hex 0.3.2",
+ "milagro_bls",
+ "rand 0.7.3",
+ "serde",
+ "serde_derive",
+ "serde_hex",
+ "tree_hash",
+ "zeroize",
+]
 
 [[package]]
 name = "bls"
@@ -875,13 +909,30 @@ dependencies = [
 
 [[package]]
 name = "client"
+version = "0.1.0"
+source = "git+https://github.com/sigp/rust-bls-remote-signer?rev=ed96121b2d7c09dc4c68d8a38c6667f8295ab590#ed96121b2d7c09dc4c68d8a38c6667f8295ab590"
+dependencies = [
+ "backend",
+ "clap",
+ "environment 0.1.0",
+ "futures 0.3.6",
+ "hyper 0.13.8",
+ "lazy_static",
+ "regex",
+ "serde",
+ "serde_json",
+ "slog",
+]
+
+[[package]]
+name = "client"
 version = "0.2.0"
 dependencies = [
  "beacon_chain",
  "bus",
  "directory",
  "dirs 3.0.1",
- "environment",
+ "environment 0.1.2",
  "error-chain",
  "eth1",
  "eth2_config",
@@ -1427,7 +1478,7 @@ dependencies = [
 name = "ef_tests"
 version = "0.2.0"
 dependencies = [
- "bls",
+ "bls 0.2.0",
  "cached_tree_hash",
  "compare_fields",
  "eth2_ssz",
@@ -1495,6 +1546,22 @@ dependencies = [
 
 [[package]]
 name = "environment"
+version = "0.1.0"
+source = "git+https://github.com/sigp/rust-bls-remote-signer?rev=ed96121b2d7c09dc4c68d8a38c6667f8295ab590#ed96121b2d7c09dc4c68d8a38c6667f8295ab590"
+dependencies = [
+ "ctrlc",
+ "exit-future",
+ "futures 0.3.6",
+ "slog",
+ "slog-async",
+ "slog-json",
+ "slog-term",
+ "sloggers",
+ "tokio 0.2.22",
+]
+
+[[package]]
+name = "environment"
 version = "0.1.2"
 dependencies = [
  "ctrlc",
@@ -1528,7 +1595,7 @@ dependencies = [
 name = "eth1"
 version = "0.2.0"
 dependencies = [
- "environment",
+ "environment 0.1.2",
  "eth1_test_rig",
  "eth2_hashing",
  "eth2_ssz",
@@ -1614,7 +1681,7 @@ name = "eth2_interop_keypairs"
 version = "0.2.0"
 dependencies = [
  "base64 0.13.0",
- "bls",
+ "bls 0.2.0",
  "eth2_hashing",
  "hex 0.4.2",
  "lazy_static",
@@ -1628,7 +1695,7 @@ dependencies = [
 name = "eth2_key_derivation"
 version = "0.1.0"
 dependencies = [
- "bls",
+ "bls 0.2.0",
  "hex 0.4.2",
  "num-bigint-dig",
  "ring",
@@ -1641,7 +1708,7 @@ name = "eth2_keystore"
 version = "0.1.0"
 dependencies = [
  "aes-ctr",
- "bls",
+ "bls 0.2.0",
  "eth2_key_derivation",
  "eth2_ssz",
  "hex 0.4.2",
@@ -2119,7 +2186,7 @@ dependencies = [
 name = "genesis"
 version = "0.2.0"
 dependencies = [
- "environment",
+ "environment 0.1.2",
  "eth1",
  "eth1_test_rig",
  "eth2_hashing",
@@ -2329,6 +2396,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "helpers"
+version = "0.1.0"
+source = "git+https://github.com/sigp/rust-bls-remote-signer?rev=ed96121b2d7c09dc4c68d8a38c6667f8295ab590#ed96121b2d7c09dc4c68d8a38c6667f8295ab590"
+dependencies = [
+ "clap",
+ "client 0.1.0",
+ "environment 0.1.0",
+ "reqwest",
+ "serde_json",
+ "tempdir",
+]
+
+[[package]]
 name = "hermit-abi"
 version = "0.1.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2456,7 +2536,7 @@ version = "0.1.0"
 dependencies = [
  "beacon_chain",
  "discv5",
- "environment",
+ "environment 0.1.2",
  "eth1",
  "eth2",
  "eth2_libp2p",
@@ -2484,7 +2564,7 @@ name = "http_metrics"
 version = "0.1.0"
 dependencies = [
  "beacon_chain",
- "environment",
+ "environment 0.1.2",
  "eth2",
  "eth2_libp2p",
  "lazy_static",
@@ -2832,13 +2912,13 @@ checksum = "830d08ce1d1d941e6b30645f1a0eb5643013d835ce3779a5fc208261dbe10f55"
 name = "lcli"
 version = "0.3.0"
 dependencies = [
- "bls",
+ "bls 0.2.0",
  "clap",
  "clap_utils",
  "deposit_contract",
  "directory",
  "dirs 3.0.1",
- "environment",
+ "environment 0.1.2",
  "eth2_keystore",
  "eth2_libp2p",
  "eth2_ssz",
@@ -3196,13 +3276,13 @@ dependencies = [
  "account_manager",
  "account_utils",
  "beacon_node",
- "bls",
+ "bls 0.2.0",
  "boot_node",
  "clap",
  "clap_utils",
  "directory",
  "env_logger",
- "environment",
+ "environment 0.1.2",
  "eth2_testnet_config",
  "futures 0.3.6",
  "lighthouse_version",
@@ -3647,7 +3727,7 @@ name = "node_test_rig"
 version = "0.2.0"
 dependencies = [
  "beacon_node",
- "environment",
+ "environment 0.1.2",
  "eth2",
  "eth2_config",
  "futures 0.3.6",
@@ -4575,6 +4655,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "26412eb97c6b088a6997e05f69403a802a92d520de2f8e63c2b65f9e0f47c4e8"
 
 [[package]]
+name = "remote_signer"
+version = "0.1.0"
+dependencies = [
+ "client 0.1.0",
+ "helpers",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio 0.2.22",
+ "types",
+]
+
+[[package]]
 name = "remove_dir_all"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4915,6 +5008,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "serde_hex"
+version = "0.2.0"
+source = "git+https://github.com/sigp/lighthouse?tag=v0.2.13#c0e76d2c15db499b6f901ac9e7e358bd0d4a8d89"
+dependencies = [
+ "hex 0.4.2",
+ "serde",
 ]
 
 [[package]]
@@ -5309,7 +5411,7 @@ name = "state_processing"
 version = "0.2.0"
 dependencies = [
  "arbitrary",
- "bls",
+ "bls 0.2.0",
  "criterion",
  "env_logger",
  "eth2_hashing",
@@ -6207,7 +6309,7 @@ name = "types"
 version = "0.2.0"
 dependencies = [
  "arbitrary",
- "bls",
+ "bls 0.2.0",
  "cached_tree_hash",
  "compare_fields",
  "compare_fields_derive",
@@ -6406,13 +6508,13 @@ version = "0.3.0"
 dependencies = [
  "account_utils",
  "bincode",
- "bls",
+ "bls 0.2.0",
  "clap",
  "clap_utils",
  "deposit_contract",
  "directory",
  "dirs 3.0.1",
- "environment",
+ "environment 0.1.2",
  "eth2",
  "eth2_config",
  "eth2_interop_keypairs",
@@ -6456,7 +6558,7 @@ dependencies = [
 name = "validator_dir"
 version = "0.1.0"
 dependencies = [
- "bls",
+ "bls 0.2.0",
  "deposit_contract",
  "eth2_keystore",
  "hex 0.4.2",

@@ -37,6 +37,7 @@ members = [
     "common/warp_utils",
     "common/task_executor",
     "common/validator_dir",
+    "common/remote_signer",
 
     "consensus/cached_tree_hash",
     "consensus/int_to_bytes",
