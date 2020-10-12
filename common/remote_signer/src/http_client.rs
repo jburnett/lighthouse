@@ -1,9 +1,21 @@
-use crate::{Error, RemoteSignerObject, RemoteSignerRequestBody, RemoteSignerResponseBody};
+use crate::{RemoteSignerObject, RemoteSignerRequestBody, RemoteSignerResponseBody};
 use reqwest::StatusCode;
 pub use reqwest::Url;
 use reqwest::{IntoUrl, Response};
 use serde::Serialize;
 use types::{ChainSpec, Fork, Hash256};
+
+#[derive(Debug)]
+pub enum Error {
+    /// The `reqwest` client raised an error.
+    Reqwest(reqwest::Error),
+    /// The server returned an error message where the body was able to be parsed.
+    ServerMessage(String),
+    /// The server returned an error message where the body was unable to be parsed.
+    StatusCode(StatusCode),
+    /// The supplied URL is badly formatted. It should look something like `http://127.0.0.1:5052`.
+    InvalidUrl(Url),
+}
 
 /// A wrapper around `reqwest::Client` which provides convenience methods
 /// to interface with a BLS Remote Signer.
@@ -42,8 +54,8 @@ impl RemoteSignerHttpClient {
 
         let body = RemoteSignerRequestBody {
             data_type: obj.get_type_str(),
-            fork: *fork, // TODO. Ugly?
-            domain: domain.to_string(),
+            fork: *fork, // TODO. 1) Ugly? 2) How good this serializes? 3) Serializing API specs?
+            domain: domain.to_string(), // TODO. 1) Ugly? 2) How good this serializes? 3) Serializing API specs?
             data: obj,
             signing_root,
         };
