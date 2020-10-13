@@ -3,7 +3,7 @@
 
 pub use reqwest::Url;
 use serde::{Deserialize, Serialize};
-use types::{BeaconBlock, Domain, Epoch, EthSpec, Fork, Hash256, SignedRoot};
+use types::{AttestationData, BeaconBlock, Domain, Epoch, EthSpec, Fork, Hash256, SignedRoot};
 
 mod http_client;
 
@@ -46,5 +46,19 @@ impl<E: EthSpec> RemoteSignerObject for BeaconBlock<E> {
 
     fn get_type_str(&self) -> String {
         "block".to_string()
+    }
+}
+
+impl RemoteSignerObject for AttestationData {
+    fn epoch(&self) -> Epoch {
+        self.target.epoch
+    }
+
+    fn get_bls_domain(&self) -> Domain {
+        Domain::BeaconAttester
+    }
+
+    fn get_type_str(&self) -> String {
+        "attestation".to_string()
     }
 }
