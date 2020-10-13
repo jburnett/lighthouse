@@ -1,21 +1,9 @@
-use crate::{RemoteSignerObject, RemoteSignerRequestBody, RemoteSignerResponseBody};
+use crate::{Error, RemoteSignerObject, RemoteSignerRequestBody, RemoteSignerResponseBody};
 use reqwest::StatusCode;
 pub use reqwest::Url;
 use reqwest::{IntoUrl, Response};
 use serde::Serialize;
-use types::{ChainSpec, Fork, Hash256};
-
-#[derive(Debug)]
-pub enum Error {
-    /// The `reqwest` client raised an error.
-    Reqwest(reqwest::Error),
-    /// The server returned an error message where the body was able to be parsed.
-    ServerMessage(String),
-    /// The server returned an error message where the body was unable to be parsed.
-    StatusCode(StatusCode),
-    /// The supplied URL is badly formatted. It should look something like `http://127.0.0.1:5052`.
-    InvalidUrl(Url),
-}
+use types::{ChainSpec, Domain, Epoch, Fork, Hash256, SignedRoot};
 
 /// A wrapper around `reqwest::Client` which provides convenience methods
 /// to interface with a BLS Remote Signer.
@@ -30,33 +18,73 @@ impl RemoteSignerHttpClient {
     }
 
     /// `POST /sign/:public-key`
+    ///
+    /// # Arguments
+    ///
+    /// * `public_key`              - Goes within the url to identify the key we want to use as signer.
+    /// * `bls_domain`              - BLS Signature domain. Supporting `BeaconProposer`, `BeaconAttester`,`Randao`.
+    /// * `data`                    - An `Option` wrapping a `BeaconBlock`, an  `AttestationData`, or `None`.
+    /// * `fork`                    - A `Fork` object containing previous and current versions.
+    /// * `epoch`                   - A `Epoch` object wrapping the epoch represented in `u64`.
+    /// * `genesis_validators_root` - A `Hash256` for domain separation and chain versioning
+    /// * `spec`                    - The chain spec in use: `sign()` leverages its functions to compute the domain.
+    ///
+    /// It sends through the wire a serialized `RemoteSignerRequestBody`.
+    #[allow(clippy::too_many_arguments)]
     pub async fn sign<T: RemoteSignerObject>(
         &self,
-        obj: &T,
         public_key: &str,
+        bls_domain: Domain,
+        data: Option<&T>,
         fork: &Fork,
+        epoch: Epoch,
         genesis_validators_root: Hash256,
         spec: &ChainSpec,
     ) -> Result<String, Error> {
+        if public_key.is_empty() {
+            return Err(Error::InvalidParameter(
+                "Empty parameter public_key".to_string(),
+            ));
+        }
+
         let mut path = self.server.clone();
         path.path_segments_mut()
             .map_err(|()| Error::InvalidUrl(self.server.clone()))?
             .push("sign")
             .push(public_key);
 
-        let domain = spec.get_domain(
-            obj.epoch(),
-            obj.get_bls_domain(),
-            fork,
-            genesis_validators_root,
-        );
-        let signing_root = obj.signing_root(domain);
+        let get_domain = || spec.get_domain(epoch, bls_domain, fork, genesis_validators_root);
+
+        let (bls_domain, signing_root) = match bls_domain {
+            Domain::BeaconProposer => match &data {
+                Some(obj) => {
+                    let bls_domain: String = obj.get_bls_domain_str(bls_domain)?;
+                    let signing_root = obj.signing_root(get_domain());
+                    Ok((bls_domain, signing_root))
+                }
+                None => return Err(Error::InvalidParameter("".to_string())),
+            },
+            Domain::BeaconAttester => match &data {
+                Some(obj) => {
+                    let bls_domain: String = obj.get_bls_domain_str(bls_domain)?;
+                    let signing_root = obj.signing_root(get_domain());
+                    Ok((bls_domain, signing_root))
+                }
+                None => return Err(Error::InvalidParameter("".to_string())),
+            },
+            Domain::Randao => Ok(("randao".to_string(), epoch.signing_root(get_domain()))),
+            _ => Err(Error::InvalidParameter(format!(
+                "Unsupported BLS Domain: {:?}",
+                bls_domain
+            ))),
+        }?;
 
         let body = RemoteSignerRequestBody {
-            data_type: obj.get_type_str(),
+            bls_domain,
+            data,
             fork: *fork, // TODO. 1) Ugly? 2) How good this serializes? 3) Serializing API specs?
-            domain: domain.to_string(), // TODO. 1) Ugly? 2) How good this serializes? 3) Serializing API specs?
-            data: obj,
+            epoch,
+            genesis_validators_root,
             signing_root,
         };
 
