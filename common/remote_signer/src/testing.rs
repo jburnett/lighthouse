@@ -4,11 +4,13 @@
 mod helpers {
     use crate::{Error, RemoteSignerHttpClient, RemoteSignerObject, Url};
     use reqwest::ClientBuilder;
+    use serde_derive::Serialize;
     use server_helpers::*;
     use std::marker::PhantomData;
     use tokio::runtime::Builder;
     use tokio::time::Duration;
-    use types::{ChainSpec, Checkpoint, Domain, Epoch, EthSpec, Fork, Hash256};
+    use tree_hash::TreeHash;
+    use types::{ChainSpec, Checkpoint, Domain, Epoch, EthSpec, Fork, Hash256, SignedRoot};
 
     pub const HAPPY_PATH_BLOCK_SIGNATURE: &str = "0xaa38076a7f03ecd0f5dbb9a0ea966c1f2a859a6f11820eb498f73e0ec91f41e176947361e39cbd7661bccc827db7d8f400bd06d0a7fdd8a4a40683b7e704f72c8461e63f61c6b204c2debe7ef16e399a882ce8433c700b6bceca7b33e60a3f5f";
 
@@ -24,6 +26,32 @@ mod helpers {
             .unwrap();
 
         RemoteSignerHttpClient::from_components(url, reqwest_client)
+    }
+
+    #[derive(Serialize)]
+    pub struct DummyRandao {}
+    impl SignedRoot for DummyRandao {}
+    impl TreeHash for DummyRandao {
+        fn tree_hash_type() -> tree_hash::TreeHashType {
+            todo!()
+        }
+        fn tree_hash_packed_encoding(&self) -> std::vec::Vec<u8> {
+            todo!()
+        }
+        fn tree_hash_packing_factor() -> usize {
+            todo!()
+        }
+        fn tree_hash_root(&self) -> Hash256 {
+            todo!()
+        }
+    }
+    impl RemoteSignerObject for DummyRandao {
+        fn get_bls_domain_str(
+            &self,
+            _: types::Domain,
+        ) -> std::result::Result<std::string::String, Error> {
+            todo!()
+        }
     }
 
     pub struct SignTestData<'a, E: EthSpec, T: RemoteSignerObject> {
@@ -156,7 +184,6 @@ mod sign_attestation {
 #[cfg(test)]
 mod randao {
     use crate::testing::helpers::*;
-    use crate::AttestationData;
     use server_helpers::*;
     use types::{Domain, EthSpec, MainnetEthSpec};
 
@@ -168,9 +195,7 @@ mod randao {
         // TODO
         // This bit can be cleaner.
         let spec = &MainnetEthSpec::default_spec();
-        // AttestationData to hack around the monomorphization.
-        // This None parameter takes care of it.
-        let test_input: SignTestData<MainnetEthSpec, AttestationData> =
+        let test_input: SignTestData<MainnetEthSpec, DummyRandao> =
             SignTestData::new(spec, None, Domain::Randao);
         // end warning
 
@@ -187,51 +212,15 @@ mod randao {
 }
 
 // TODO
-// Common used functions and structs go here
-
-// TODO
-// Test from_components with an invalid url.
-
-// TODO
-// We will hunt for errors that we are not having
-// using the conventional sign API, and
-// test them here.
-
-// TODO
-// Check that I am building the right json for the three cases.
-
-// TODO
-// Be defensive
-// Tests cases the remote signer accounts for:
-// - missing field signingRoot (400)
-// - bad request
-// - etc
-
-// TODO
-// Another silly idea:
-// Let's do the very test agains the "real" `.sign()` functions
-
-// TODO
-// Otro test
-// Que no mande datos si el campo data es `None`.
-// (i.e. desconfiamos de serde skip, jaja).
-
-/*
-
-# How the sign is called currently at validator_store.rs
-
-self.validators
-    .read()
-    .voting_keypair(validator_pubkey)
-    .and_then(|voting_keypair| {
-        let domain = self.spec.get_domain(
-            epoch,
-            Domain::Randao,
-            &self.fork()?,
-            self.genesis_validators_root,
-        );
-        let message = epoch.signing_root(domain);
-
-        Some(voting_keypair.sk.sign(message))
-    })
-*/
+// - Test from_components with an invalid url.
+// - We will hunt for errors that we are not having
+//   using the conventional sign API, and
+//   test them here.
+// - Check that I am building the right json for the three cases.
+// - Tests cases the remote signer accounts for:
+//   missing field signingRoot (400)
+//   bad request
+//   etc
+// - Another silly idea:
+//   Let's do the very test agains the "real" `.sign()` functions
+// - Test that serde is effectively NOT sending data with None.

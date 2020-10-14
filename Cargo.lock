@@ -4662,8 +4662,11 @@ dependencies = [
  "helpers",
  "reqwest",
  "serde",
+ "serde_derive",
  "serde_json",
  "tokio 0.2.22",
+ "tree_hash",
+ "tree_hash_derive",
  "types",
 ]
 

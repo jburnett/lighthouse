@@ -6,7 +6,10 @@ edition = "2018"
 
 [dev-dependencies]
 client = { git = "https://github.com/sigp/rust-bls-remote-signer", rev = "ed96121b2d7c09dc4c68d8a38c6667f8295ab590" }
+serde_derive = "1.0.116"
 server_helpers = { git = "https://github.com/sigp/rust-bls-remote-signer", rev = "ed96121b2d7c09dc4c68d8a38c6667f8295ab590", package = "helpers" }
+tree_hash = "0.1.1"
+tree_hash_derive = "0.2.0"
 
 [dependencies]
 reqwest = { version = "0.10.8", features = ["json"] }
