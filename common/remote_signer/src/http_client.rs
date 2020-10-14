@@ -25,8 +25,8 @@ impl RemoteSignerHttpClient {
     /// * `bls_domain`              - BLS Signature domain. Supporting `BeaconProposer`, `BeaconAttester`,`Randao`.
     /// * `data`                    - An `Option` wrapping a `BeaconBlock`, an  `AttestationData`, or `None`.
     /// * `fork`                    - A `Fork` object containing previous and current versions.
-    /// * `epoch`                   - A `Epoch` object wrapping the epoch represented in `u64`.
-    /// * `genesis_validators_root` - A `Hash256` for domain separation and chain versioning
+    /// * `epoch`                   - An `Epoch` object wrapping the epoch represented in `u64`.
+    /// * `genesis_validators_root` - A `Hash256` for domain separation and chain versioning.
     /// * `spec`                    - The chain spec in use: `sign()` leverages its functions to compute the domain.
     ///
     /// It sends through the wire a serialized `RemoteSignerRequestBody`.
@@ -36,7 +36,7 @@ impl RemoteSignerHttpClient {
         public_key: &str,
         bls_domain: Domain,
         data: Option<T>,
-        fork: &Fork,
+        fork: Fork,
         epoch: Epoch,
         genesis_validators_root: Hash256,
         spec: &ChainSpec,
@@ -53,11 +53,13 @@ impl RemoteSignerHttpClient {
             .push("sign")
             .push(public_key);
 
-        let get_domain = || spec.get_domain(epoch, bls_domain, fork, genesis_validators_root);
+        let get_domain = || spec.get_domain(epoch, bls_domain, &fork, genesis_validators_root);
 
         let (bls_domain, signing_root) = match bls_domain {
             Domain::BeaconProposer => match &data {
                 Some(obj) => {
+                    // Control: "You gave me a Domain::BeaconProposer",
+                    // "Do you have then, a BeaconBlock object as data?".
                     let bls_domain: String = obj.get_bls_domain_str(bls_domain)?;
                     let signing_root = obj.signing_root(get_domain());
                     Ok((bls_domain, signing_root))
@@ -82,7 +84,7 @@ impl RemoteSignerHttpClient {
         let body = RemoteSignerRequestBody {
             bls_domain,
             data,
-            fork: *fork, // TODO. 1) Ugly? 2) How good this serializes? 3) Serializing API specs?
+            fork,
             epoch,
             genesis_validators_root,
             signing_root,

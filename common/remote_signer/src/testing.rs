@@ -137,7 +137,7 @@ mod helpers {
             &test_input.public_key,
             test_input.bls_domain,
             test_input.data,
-            &test_input.fork,
+            test_input.fork,
             test_input.epoch,
             test_input.genesis_validators_root,
             &test_input.spec,
@@ -208,15 +208,15 @@ mod randao {
 
 // # Test Strategy (TODO)
 //
-// ## JSON serialization
-// * block
-// * attestation
-// * None when is randao
-//
 // ## Remote signer vs The LH "local" implementation
 // * block
 // * attestation
 // * randao
+//
+// ## JSON serialization
+// * block
+// * attestation
+// * None when is randao. (Let's enforce it before the serialization as well.)
 //
 // ## Message preparation
 // * Somebody sends a Domain type X, but data from a different type, or none (if it applies)
