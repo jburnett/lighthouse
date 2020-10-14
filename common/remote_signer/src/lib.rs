@@ -125,9 +125,6 @@
 
 mod http_client;
 
-#[cfg(test)]
-mod testing;
-
 pub use http_client::RemoteSignerHttpClient;
 use reqwest::StatusCode;
 pub use reqwest::Url;
