@@ -55,26 +55,41 @@ impl RemoteSignerHttpClient {
 
         let get_domain = || spec.get_domain(epoch, bls_domain, &fork, genesis_validators_root);
 
+        let get_signing_root = |obj: &T| -> Result<(String, Hash256), Error> {
+            // Validate that `bls_domain` maps to the right object given in `data`.
+            let bls_domain: String = obj.get_bls_domain_str(bls_domain)?;
+            let signing_root = obj.signing_root(get_domain());
+            Ok((bls_domain, signing_root))
+        };
+
         let (bls_domain, signing_root) = match bls_domain {
             Domain::BeaconProposer => match &data {
-                Some(obj) => {
-                    // Control: "You gave me a Domain::BeaconProposer",
-                    // "Do you have then, a BeaconBlock object as data?".
-                    let bls_domain: String = obj.get_bls_domain_str(bls_domain)?;
-                    let signing_root = obj.signing_root(get_domain());
-                    Ok((bls_domain, signing_root))
+                Some(obj) => get_signing_root(obj),
+                None => {
+                    return Err(Error::InvalidParameter(
+                        "Expected data for a block.".to_string(),
+                    ))
                 }
-                None => return Err(Error::InvalidParameter("".to_string())),
             },
+
             Domain::BeaconAttester => match &data {
-                Some(obj) => {
-                    let bls_domain: String = obj.get_bls_domain_str(bls_domain)?;
-                    let signing_root = obj.signing_root(get_domain());
-                    Ok((bls_domain, signing_root))
+                Some(obj) => get_signing_root(obj),
+                None => {
+                    return Err(Error::InvalidParameter(
+                        "Expected data for an attestation.".to_string(),
+                    ))
                 }
-                None => return Err(Error::InvalidParameter("".to_string())),
             },
-            Domain::Randao => Ok(("randao".to_string(), epoch.signing_root(get_domain()))),
+
+            Domain::Randao => match &data {
+                None => Ok(("randao".to_string(), epoch.signing_root(get_domain()))),
+                Some(_) => {
+                    return Err(Error::InvalidParameter(
+                        "Unexpected data received for randao".to_string(),
+                    ))
+                }
+            },
+
             _ => Err(Error::InvalidParameter(format!(
                 "Unsupported BLS Domain: {:?}",
                 bls_domain
