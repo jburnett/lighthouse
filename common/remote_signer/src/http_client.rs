@@ -35,7 +35,7 @@ impl RemoteSignerHttpClient {
         &self,
         public_key: &str,
         bls_domain: Domain,
-        data: Option<&T>,
+        data: Option<T>,
         fork: &Fork,
         epoch: Epoch,
         genesis_validators_root: Hash256,
