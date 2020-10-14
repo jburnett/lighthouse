@@ -69,6 +69,7 @@ members = [
     "testing/eth1_test_rig",
     "testing/node_test_rig",
     "testing/state_transition_vectors",
+    "testing/remote_signer_test",
 
     "validator_client",
     "validator_client/slashing_protection",

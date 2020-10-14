@@ -31,11 +31,11 @@ impl RemoteSignerHttpClient {
     ///
     /// It sends through the wire a serialized `RemoteSignerRequestBody`.
     #[allow(clippy::too_many_arguments)]
-    pub async fn sign<T: RemoteSignerObject>(
+    pub async fn sign<R: RemoteSignerObject>(
         &self,
         public_key: &str,
         bls_domain: Domain,
-        data: Option<T>,
+        data: Option<R>,
         fork: Fork,
         epoch: Epoch,
         genesis_validators_root: Hash256,
@@ -55,7 +55,7 @@ impl RemoteSignerHttpClient {
 
         let get_domain = || spec.get_domain(epoch, bls_domain, &fork, genesis_validators_root);
 
-        let get_signing_root = |obj: &T| -> Result<(String, Hash256), Error> {
+        let get_signing_root = |obj: &R| -> Result<(String, Hash256), Error> {
             // Validate that `bls_domain` maps to the right object given in `data`.
             let bls_domain: String = obj.get_bls_domain_str(bls_domain)?;
             let signing_root = obj.signing_root(get_domain());

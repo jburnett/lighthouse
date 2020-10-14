@@ -4658,15 +4658,26 @@ checksum = "26412eb97c6b088a6997e05f69403a802a92d520de2f8e63c2b65f9e0f47c4e8"
 name = "remote_signer"
 version = "0.1.0"
 dependencies = [
- "client 0.1.0",
  "helpers",
+ "remote_signer_test",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio 0.2.22",
+ "types",
+]
+
+[[package]]
+name = "remote_signer_test"
+version = "0.1.0"
+dependencies = [
+ "helpers",
+ "remote_signer",
  "reqwest",
  "serde",
  "serde_derive",
- "serde_json",
  "tokio 0.2.22",
  "tree_hash",
- "tree_hash_derive",
  "types",
 ]
 
