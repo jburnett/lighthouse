@@ -4659,6 +4659,7 @@ name = "remote_signer"
 version = "0.1.0"
 dependencies = [
  "helpers",
+ "rand 0.7.3",
  "remote_signer_test",
  "reqwest",
  "serde",
@@ -4672,6 +4673,7 @@ name = "remote_signer_test"
 version = "0.1.0"
 dependencies = [
  "helpers",
+ "hex 0.4.2",
  "remote_signer",
  "reqwest",
  "serde",

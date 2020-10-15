@@ -53,15 +53,11 @@
 //!
 //! #### `data`
 //!
-//! An `Option<T>` wrapping a `BeaconBlock`, an  `AttestationData`, or `None`.
+//! A `BeaconBlock`, `AttestationData`, or `Epoch`.
 //!
 //! #### `fork`
 //!
 //! A [`Fork`] object, containing previous and current versions.
-//!
-//! #### `epoch`
-//!
-//! An [`Epoch`] object wrapping the epoch represented in `u64`.
 //!
 //! #### `genesis_validators_root`
 //!
@@ -96,11 +92,11 @@
 //! In short, to obtain a signature from the remote signer, we need to produce
 //! (and serialize) the following objects:
 //!
-//! * `fork`
-//! * `epoch`
-//! * `genesis_validators_root`
-//! * `bls_domain`
-//! * `data` of the object, if this is a Block proposal, or an attestation.
+//! * `bls_domain`.
+//! * `data` of the object, if this is a block proposal, an attestation, or an epoch.
+//!   * `epoch`, obtained from the object.
+//! * `fork`.
+//! * `genesis_validators_root`.
 //!
 //! And, of course, the identifier of the secret key, the `public_key`.
 //!
@@ -150,15 +146,11 @@ struct RemoteSignerRequestBody<T> {
     /// BLS Signature domain. Supporting `BeaconProposer`, `BeaconAttester`,`Randao`.
     bls_domain: String,
 
-    /// An `Option` wrapping a `BeaconBlock`, an  `AttestationData`, or `None`.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    data: Option<T>,
+    /// A `BeaconBlock`, `AttestationData`, or `Epoch`.
+    data: T,
 
     /// A `Fork` object containing previous and current versions.
     fork: Fork,
-
-    /// An `Epoch` object wrapping the epoch represented in `u64`.
-    epoch: Epoch,
 
     /// A `Hash256` for domain separation and chain versioning.
     genesis_validators_root: Hash256,
@@ -178,6 +170,7 @@ struct RemoteSignerResponseBody {
 /// to be sent through the wire, against their BLS Domains.
 pub trait RemoteSignerObject: SignedRoot + Serialize {
     fn get_bls_domain_str(&self, domain: Domain) -> Result<String, Error>;
+    fn get_epoch(&self) -> Epoch;
 }
 
 impl<E: EthSpec> RemoteSignerObject for BeaconBlock<E> {
@@ -190,6 +183,10 @@ impl<E: EthSpec> RemoteSignerObject for BeaconBlock<E> {
             ))),
         }
     }
+
+    fn get_epoch(&self) -> Epoch {
+        self.epoch()
+    }
 }
 
 impl RemoteSignerObject for AttestationData {
@@ -201,5 +198,25 @@ impl RemoteSignerObject for AttestationData {
                 domain
             ))),
         }
+    }
+
+    fn get_epoch(&self) -> Epoch {
+        self.target.epoch
+    }
+}
+
+impl RemoteSignerObject for Epoch {
+    fn get_bls_domain_str(&self, domain: Domain) -> Result<String, Error> {
+        match domain {
+            Domain::Randao => Ok("randao".to_string()),
+            _ => Err(Error::InvalidParameter(format!(
+                "Domain mismatch for attestation. Expected Epoch, got {:?}",
+                domain
+            ))),
+        }
+    }
+
+    fn get_epoch(&self) -> Epoch {
+        *self
     }
 }

@@ -3,7 +3,7 @@ use reqwest::StatusCode;
 pub use reqwest::Url;
 use reqwest::{IntoUrl, Response};
 use serde::Serialize;
-use types::{ChainSpec, Domain, Epoch, Fork, Hash256, SignedRoot};
+use types::{ChainSpec, Domain, Fork, Hash256};
 
 /// A wrapper around `reqwest::Client` which provides convenience methods
 /// to interface with a BLS Remote Signer.
@@ -23,21 +23,18 @@ impl RemoteSignerHttpClient {
     ///
     /// * `public_key`              - Goes within the url to identify the key we want to use as signer.
     /// * `bls_domain`              - BLS Signature domain. Supporting `BeaconProposer`, `BeaconAttester`,`Randao`.
-    /// * `data`                    - An `Option` wrapping a `BeaconBlock`, an  `AttestationData`, or `None`.
+    /// * `data`                    - A `BeaconBlock`, `AttestationData`, or `Epoch`.
     /// * `fork`                    - A `Fork` object containing previous and current versions.
-    /// * `epoch`                   - An `Epoch` object wrapping the epoch represented in `u64`.
     /// * `genesis_validators_root` - A `Hash256` for domain separation and chain versioning.
     /// * `spec`                    - The chain spec in use: `sign()` leverages its functions to compute the domain.
     ///
     /// It sends through the wire a serialized `RemoteSignerRequestBody`.
-    #[allow(clippy::too_many_arguments)]
     pub async fn sign<R: RemoteSignerObject>(
         &self,
         public_key: &str,
         bls_domain: Domain,
-        data: Option<R>,
+        data: R,
         fork: Fork,
-        epoch: Epoch,
         genesis_validators_root: Hash256,
         spec: &ChainSpec,
     ) -> Result<String, Error> {
@@ -53,42 +50,21 @@ impl RemoteSignerHttpClient {
             .push("sign")
             .push(public_key);
 
-        let get_domain = || spec.get_domain(epoch, bls_domain, &fork, genesis_validators_root);
+        let get_domain = |epoch| spec.get_domain(epoch, bls_domain, &fork, genesis_validators_root);
 
         let get_signing_root = |obj: &R| -> Result<(String, Hash256), Error> {
             // Validate that `bls_domain` maps to the right object given in `data`.
             let bls_domain: String = obj.get_bls_domain_str(bls_domain)?;
-            let signing_root = obj.signing_root(get_domain());
+            let signing_root = obj.signing_root(get_domain(obj.get_epoch()));
             Ok((bls_domain, signing_root))
         };
 
         let (bls_domain, signing_root) = match bls_domain {
-            Domain::BeaconProposer => match &data {
-                Some(obj) => get_signing_root(obj),
-                None => {
-                    return Err(Error::InvalidParameter(
-                        "Expected data for a block.".to_string(),
-                    ))
-                }
-            },
+            Domain::BeaconProposer => get_signing_root(&data),
 
-            Domain::BeaconAttester => match &data {
-                Some(obj) => get_signing_root(obj),
-                None => {
-                    return Err(Error::InvalidParameter(
-                        "Expected data for an attestation.".to_string(),
-                    ))
-                }
-            },
+            Domain::BeaconAttester => get_signing_root(&data),
 
-            Domain::Randao => match &data {
-                None => Ok(("randao".to_string(), epoch.signing_root(get_domain()))),
-                Some(_) => {
-                    return Err(Error::InvalidParameter(
-                        "Unexpected data received for randao".to_string(),
-                    ))
-                }
-            },
+            Domain::Randao => get_signing_root(&data),
 
             _ => Err(Error::InvalidParameter(format!(
                 "Unsupported BLS Domain: {:?}",
@@ -100,7 +76,6 @@ impl RemoteSignerHttpClient {
             bls_domain,
             data,
             fork,
-            epoch,
             genesis_validators_root,
             signing_root,
         };
