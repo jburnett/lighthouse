@@ -26,7 +26,7 @@ impl<T: RemoteSignerObject> LocalSignerTestData<T> {
             fork: Fork {
                 previous_version: [1; 4],
                 current_version: [2; 4],
-                epoch: epoch,
+                epoch,
             },
             genesis_validators_root: Hash256::from_low_u64_be(0xc137),
             obj,

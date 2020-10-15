@@ -178,7 +178,7 @@ impl<E: EthSpec> RemoteSignerObject for BeaconBlock<E> {
         match domain {
             Domain::BeaconProposer => Ok("beacon_proposer".to_string()),
             _ => Err(Error::InvalidParameter(format!(
-                "Domain mismatch for block. Expected BeaconProposer, got {:?}",
+                "Domain mismatch for the BeaconBlock object. Expected BeaconProposer, got {:?}",
                 domain
             ))),
         }
@@ -194,7 +194,7 @@ impl RemoteSignerObject for AttestationData {
         match domain {
             Domain::BeaconAttester => Ok("beacon_attester".to_string()),
             _ => Err(Error::InvalidParameter(format!(
-                "Domain mismatch for attestation. Expected BeaconAttester, got {:?}",
+                "Domain mismatch for the AttestationData object. Expected BeaconAttester, got {:?}",
                 domain
             ))),
         }
@@ -210,7 +210,7 @@ impl RemoteSignerObject for Epoch {
         match domain {
             Domain::Randao => Ok("randao".to_string()),
             _ => Err(Error::InvalidParameter(format!(
-                "Domain mismatch for attestation. Expected Epoch, got {:?}",
+                "Domain mismatch for the Epoch object. Expected Randao, got {:?}",
                 domain
             ))),
         }

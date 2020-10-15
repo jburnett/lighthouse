@@ -632,25 +632,6 @@ checksum = "8d696c370c750c948ada61c69a0ee2cbbb9c50b1019ddb86d9317157a99c2cae"
 [[package]]
 name = "bls"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse?tag=v0.2.13#c0e76d2c15db499b6f901ac9e7e358bd0d4a8d89"
-dependencies = [
- "blst",
- "eth2_hashing",
- "eth2_ssz",
- "ethereum-types",
- "hex 0.3.2",
- "milagro_bls",
- "rand 0.7.3",
- "serde",
- "serde_derive",
- "serde_hex",
- "tree_hash",
- "zeroize",
-]
-
-[[package]]
-name = "bls"
-version = "0.2.0"
 dependencies = [
  "arbitrary",
  "blst",
@@ -663,6 +644,25 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_utils",
+ "tree_hash",
+ "zeroize",
+]
+
+[[package]]
+name = "bls"
+version = "0.2.0"
+source = "git+https://github.com/sigp/lighthouse?tag=v0.2.13#c0e76d2c15db499b6f901ac9e7e358bd0d4a8d89"
+dependencies = [
+ "blst",
+ "eth2_hashing",
+ "eth2_ssz",
+ "ethereum-types",
+ "hex 0.3.2",
+ "milagro_bls",
+ "rand 0.7.3",
+ "serde",
+ "serde_derive",
+ "serde_hex",
  "tree_hash",
  "zeroize",
 ]

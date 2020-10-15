@@ -54,3 +54,13 @@ pub fn get_input_data_randao(seed: u64) -> RemoteSignerTestData<E, Epoch> {
     let epoch = Epoch::new(seed);
     RemoteSignerTestData::new(PUBLIC_KEY_1, spec, epoch, Domain::Randao)
 }
+
+pub fn get_test_input_and_set_domain<E: EthSpec, T: RemoteSignerObject>(
+    f: fn(u64) -> RemoteSignerTestData<E, T>,
+    bls_domain: Domain,
+) -> RemoteSignerTestData<E, T> {
+    let mut test_input = f(0xc137);
+    test_input.bls_domain = bls_domain;
+
+    test_input
+}
