@@ -180,28 +180,3 @@ mod message_preparation {
         test_signer.shutdown();
     }
 }
-
-// # Test Strategy (TODO)
-//
-// ## POST
-// * Server unavailable / off
-// * Server error (do the classic problem with the directories)
-// * Malformed URL
-// * Bad URL (to get 404s)
-// * Bad response (use mock)
-//   * no json
-//   * missing_signing_root_in_json
-//   * json, empty_signing_root_in_json#
-//   * invalid_string_signing_root
-//   * json, signature, but extra fields (should be ignored?)
-// * secret key problems
-//   * key_not_found
-//   * invalid_secret_key
-//   * key mismatch
-// * Weird status code (418)
-// * Timeout
-//
-// ## Stuff to do with a mock
-// * We can evaluate the json payload we are sending
-// * We can instruct the mock to give lousy response, to test our resilience.
-//   * In particular, how we handle errors at the end of the `sign()` function.
