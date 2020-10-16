@@ -15,7 +15,7 @@ mod sign {
                     .unwrap_err()
                 {
                     Error::InvalidParameter(message) => assert_eq!(message, $msg),
-                    _ => panic!(),
+                    e => panic!("{:?}", e),
                 }
             };
         }
@@ -65,7 +65,7 @@ mod sign {
                     .unwrap_err()
                 {
                     Error::InvalidParameter(message) => assert_eq!(message, $msg),
-                    _ => panic!(),
+                    e => panic!("{:?}", e),
                 }
             };
         }
@@ -88,7 +88,7 @@ mod sign {
                     .unwrap_err()
                 {
                     Error::ServerMessage(message) => assert_eq!(message, $msg),
-                    _ => panic!(),
+                    e => panic!("{:?}", e),
                 }
             };
         }
@@ -106,15 +106,44 @@ mod sign {
 
         test_signer.shutdown();
     }
-}
-/*
 
-*/
+    #[test]
+    fn unsupported_bls_domain() {
+        let (test_signer, _tmp_dir) = set_up_api_test_signer_to_sign_message();
+        let test_client = set_up_test_client(&test_signer.address);
+
+        let test_case = |bls_domain, msg| {
+            let mut test_input = get_input_data_block(0xc137);
+            test_input.bls_domain = bls_domain;
+            let signature = do_sign_request(&test_client, test_input);
+
+            match signature.unwrap_err() {
+                Error::InvalidParameter(message) => assert_eq!(message, msg),
+                e => panic!("{:?}", e),
+            }
+        };
+
+        test_case(Domain::Deposit, "Unsupported BLS Domain: Deposit");
+        test_case(
+            Domain::VoluntaryExit,
+            "Unsupported BLS Domain: VoluntaryExit",
+        );
+        test_case(
+            Domain::SelectionProof,
+            "Unsupported BLS Domain: SelectionProof",
+        );
+        test_case(
+            Domain::AggregateAndProof,
+            "Unsupported BLS Domain: AggregateAndProof",
+        );
+
+        test_signer.shutdown();
+    }
+}
 
 // # Test Strategy (TODO)
 //
 // ## Message preparation
-// * unsupported bls_domain
 // * data: People implementing a new RemoteSignerObject: SignedRoot + Serialize
 //   * what happens? Should pass? no?
 // * bad fork field (establish what can make this a bad parameter)
