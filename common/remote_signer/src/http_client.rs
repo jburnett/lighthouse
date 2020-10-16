@@ -1,8 +1,9 @@
-use crate::{Error, RemoteSignerObject, RemoteSignerRequestBody, RemoteSignerResponseBody};
+use crate::{
+    Error, RemoteSignerObject, RemoteSignerRequestBody, RemoteSignerResponseBodyError,
+    RemoteSignerResponseBodyOK,
+};
 use reqwest::StatusCode;
 pub use reqwest::Url;
-use reqwest::{IntoUrl, Response};
-use serde::Serialize;
 use types::{ChainSpec, Domain, Fork, Hash256};
 
 /// A wrapper around `reqwest::Client` which provides convenience methods
@@ -80,40 +81,23 @@ impl RemoteSignerHttpClient {
             signing_root,
         };
 
-        let response = self.post(path, &body).await?;
-
-        let signature = match response.json::<RemoteSignerResponseBody>().await {
-            Ok(resp_json) => Ok(resp_json.signature),
-            Err(e) => Err(Error::Reqwest(e)),
-        }?;
-
-        Ok(signature)
-    }
-
-    /// Performs an HTTP POST request.
-    async fn post<T: Serialize, U: IntoUrl>(&self, url: U, body: &T) -> Result<Response, Error> {
         let response = self
             .client
-            .post(url)
-            .json(body)
+            .post(path)
+            .json(&body)
             .send()
             .await
             .map_err(Error::Reqwest)?;
 
-        ok_or_error(response).await
-    }
-}
-
-/// Returns `Ok(response)` if the response is a `200 OK` response. Otherwise, creates an
-/// appropriate error message.
-async fn ok_or_error(response: Response) -> Result<Response, Error> {
-    let status = response.status();
-
-    if status == StatusCode::OK {
-        Ok(response)
-    } else if let Ok(message) = response.json().await {
-        Err(Error::ServerMessage(message))
-    } else {
-        Err(Error::StatusCode(status))
+        match response.status() {
+            StatusCode::OK => match response.json::<RemoteSignerResponseBodyOK>().await {
+                Ok(resp_json) => Ok(resp_json.signature),
+                Err(e) => Err(Error::Reqwest(e)),
+            },
+            _ => match response.json::<RemoteSignerResponseBodyError>().await {
+                Ok(resp_json) => Err(Error::ServerMessage(resp_json.error)),
+                Err(e) => Err(Error::Reqwest(e)),
+            },
+        }
     }
 }

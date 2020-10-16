@@ -11,7 +11,7 @@ mod sign {
 
         macro_rules! test_case {
             ($f: expr, $bls_domain: expr, $msg: expr) => {
-                match do_sign_request(&test_client, get_test_input_and_set_domain($f, $bls_domain))
+                match do_sign_request(&test_client, get_input_data_and_set_domain($f, $bls_domain))
                     .unwrap_err()
                 {
                     Error::InvalidParameter(message) => assert_eq!(message, $msg),
@@ -30,13 +30,11 @@ mod sign {
             Domain::Randao,
             "Domain mismatch for the BeaconBlock object. Expected BeaconProposer, got Randao"
         );
-
         test_case!(
             get_input_data_attestation,
             Domain::BeaconProposer,
             "Domain mismatch for the AttestationData object. Expected BeaconAttester, got BeaconProposer"
         );
-
         test_case!(
             get_input_data_attestation,
             Domain::Randao,
@@ -55,6 +53,59 @@ mod sign {
 
         test_signer.shutdown();
     }
+
+    #[test]
+    fn empty_public_key_parameter() {
+        let (test_signer, _tmp_dir) = set_up_api_test_signer_to_sign_message();
+        let test_client = set_up_test_client(&test_signer.address);
+
+        macro_rules! test_case {
+            ($f: expr, $p: expr, $msg: expr) => {
+                match do_sign_request(&test_client, get_input_data_and_set_public_key($f, $p))
+                    .unwrap_err()
+                {
+                    Error::InvalidParameter(message) => assert_eq!(message, $msg),
+                    _ => panic!(),
+                }
+            };
+        }
+
+        test_case!(get_input_data_block, "", "Empty parameter public_key");
+        test_case!(get_input_data_attestation, "", "Empty parameter public_key");
+        test_case!(get_input_data_randao, "", "Empty parameter public_key");
+
+        test_signer.shutdown();
+    }
+
+    #[test]
+    fn invalid_public_key_param() {
+        let (test_signer, _tmp_dir) = set_up_api_test_signer_to_sign_message();
+        let test_client = set_up_test_client(&test_signer.address);
+
+        macro_rules! test_case {
+            ($f: expr, $p: expr, $msg: expr) => {
+                match do_sign_request(&test_client, get_input_data_and_set_public_key($f, $p))
+                    .unwrap_err()
+                {
+                    Error::ServerMessage(message) => assert_eq!(message, $msg),
+                    _ => panic!(),
+                }
+            };
+        }
+
+        test_case!(get_input_data_block, "/", "Invalid public key: %2F");
+        test_case!(get_input_data_attestation, "/", "Invalid public key: %2F");
+        test_case!(get_input_data_randao, "/", "Invalid public key: %2F");
+        test_case!(get_input_data_block, "//", "Invalid public key: %2F%2F");
+        test_case!(get_input_data_block, "///", "Invalid public key: %2F%2F%2F");
+        test_case!(
+            get_input_data_block,
+            "/?'or 1 = 1 --",
+            "Invalid public key: %2F%3F\'or%201%20=%201%20--"
+        );
+
+        test_signer.shutdown();
+    }
 }
 /*
 
@@ -63,9 +114,6 @@ mod sign {
 // # Test Strategy (TODO)
 //
 // ## Message preparation
-// * Somebody sends a Domain type X, but data from a different type, or none (if it applies)
-// * public_key field is empty
-// * no_public_key_in_path (5 cases)
 // * unsupported bls_domain
 // * data: People implementing a new RemoteSignerObject: SignedRoot + Serialize
 //   * what happens? Should pass? no?
@@ -73,8 +121,6 @@ mod sign {
 // * bad epoch field (establish what can make this a bad parameter)
 // * bad genesis validators root field (establish what can make this a bad parameter)
 // * bad spec (establish what can make this a bad parameter)
-//
-// ## Errors that the remote signer shoould catch, but we don't trust and check anyways
 // * additional_path_segments (3 cases)
 // * invalid_public_key (6 cases)
 // * invalid json (4 cases)
@@ -98,3 +144,7 @@ mod sign {
 // * Weird status code (418)
 // * Timeout
 //
+// ## Stuff to do with a mock
+// * We can evaluate the json payload we are sending
+// * We can instruct the mock to give lousy response, to test our resilience.
+//   * In particular, how we handle errors at the end of the `sign()` function.

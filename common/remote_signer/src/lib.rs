@@ -162,8 +162,13 @@ struct RemoteSignerRequestBody<T> {
 }
 
 #[derive(Deserialize)]
-struct RemoteSignerResponseBody {
+struct RemoteSignerResponseBodyOK {
     signature: String,
+}
+
+#[derive(Deserialize)]
+struct RemoteSignerResponseBodyError {
+    error: String,
 }
 
 /// Allows the verification of the BeaconBlock and AttestationData objects
