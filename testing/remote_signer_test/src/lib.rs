@@ -29,7 +29,7 @@ pub fn do_sign_request<E: EthSpec, T: RemoteSignerObject>(
     test_input: RemoteSignerTestData<E, T>,
 ) -> Result<String, Error> {
     let mut runtime = Builder::new()
-        .threaded_scheduler()
+        .basic_scheduler()
         .enable_all()
         .build()
         .unwrap();

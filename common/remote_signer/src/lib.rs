@@ -122,7 +122,6 @@
 mod http_client;
 
 pub use http_client::RemoteSignerHttpClient;
-use reqwest::StatusCode;
 pub use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use types::{AttestationData, BeaconBlock, Domain, Epoch, EthSpec, Fork, Hash256, SignedRoot};
@@ -133,8 +132,6 @@ pub enum Error {
     Reqwest(reqwest::Error),
     /// The server returned an error message where the body was able to be parsed.
     ServerMessage(String),
-    /// The server returned an error message where the body was unable to be parsed.
-    StatusCode(StatusCode),
     /// The supplied URL is badly formatted. It should look something like `http://127.0.0.1:5052`.
     InvalidUrl(Url),
     /// The supplied parameter is invalid.
