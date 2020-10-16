@@ -1,4 +1,4 @@
-mod sign {
+mod message_preparation {
     use remote_signer::Error;
     use remote_signer_test::*;
     use server_helpers::*;
@@ -139,21 +139,49 @@ mod sign {
 
         test_signer.shutdown();
     }
+
+    #[test]
+    fn invalid_public_key_param_additional_path_segments() {
+        let (test_signer, _tmp_dir) = set_up_api_test_signer_to_sign_message();
+        let test_client = set_up_test_client(&test_signer.address);
+
+        macro_rules! test_case {
+            ($f: expr, $p: expr, $msg: expr) => {
+                match do_sign_request(&test_client, get_input_data_and_set_public_key($f, $p))
+                    .unwrap_err()
+                {
+                    Error::ServerMessage(message) => assert_eq!(message, $msg),
+                    e => panic!("{:?}", e),
+                }
+            };
+        }
+
+        test_case!(
+            get_input_data_block,
+            "this/receipt",
+            "Invalid public key: this%2Freceipt"
+        );
+        test_case!(
+            get_input_data_attestation,
+            "/this/receipt/please",
+            "Invalid public key: %2Fthis%2Freceipt%2Fplease"
+        );
+        test_case!(
+            get_input_data_randao,
+            "this/receipt/please?",
+            "Invalid public key: this%2Freceipt%2Fplease%3F"
+        );
+        test_case!(
+            get_input_data_block,
+            &format!("{}/valid/pk", PUBLIC_KEY_1),
+            format!("Invalid public key: {}%2Fvalid%2Fpk", PUBLIC_KEY_1)
+        );
+
+        test_signer.shutdown();
+    }
 }
 
 // # Test Strategy (TODO)
-//
-// ## Message preparation
-// * data: People implementing a new RemoteSignerObject: SignedRoot + Serialize
-//   * what happens? Should pass? no?
-// * bad fork field (establish what can make this a bad parameter)
-// * bad epoch field (establish what can make this a bad parameter)
-// * bad genesis validators root field (establish what can make this a bad parameter)
-// * bad spec (establish what can make this a bad parameter)
-// * additional_path_segments (3 cases)
-// * invalid_public_key (6 cases)
-// * invalid json (4 cases)
-// * signing_root_in_json_not_a_string (4 cases)
 //
 // ## POST
 // * Server unavailable / off
