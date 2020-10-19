@@ -54,8 +54,6 @@ mod post {
         let (test_signer, _tmp_dir) = set_up_api_test_signer_to_sign_message();
 
         let run_testcase = |u: &str| -> Result<String, String> {
-            // TODO
-            // Sacale el tipo de error aca, se ve un poco mas decente asi
             let url: Url = u.parse().map_err(|e| format!("[ParseError] {:?}", e))?;
 
             let reqwest_client = ClientBuilder::new()
@@ -79,7 +77,7 @@ mod post {
                         format!("[Reqwest] {:?}", re)
                     }
                 }
-                _ => format!("[HERMAN] {:?}", e),
+                _ => format!("{:?}", e),
             })
         };
 
@@ -124,20 +122,114 @@ mod post {
 
         test_signer.shutdown();
     }
+
+    #[test]
+    fn wrong_url() {
+        let (test_signer, _tmp_dir) = set_up_api_test_signer_to_sign_message();
+
+        let run_testcase = |u: &str| -> Result<String, String> {
+            let url: Url = u.parse().unwrap();
+
+            let reqwest_client = ClientBuilder::new()
+                .timeout(Duration::from_secs(12))
+                .build()
+                .unwrap();
+
+            let test_client = RemoteSignerHttpClient::from_components(url, reqwest_client);
+
+            let test_input = get_input_data_block(0xc137);
+            let signature = do_sign_request(&test_client, test_input);
+
+            signature.map_err(|e| format!("{:?}", e))
+        };
+
+        let testcase = |u: &str, msgs: Vec<&str>| {
+            let r = run_testcase(u).unwrap_err();
+
+            for msg in msgs.iter() {
+                assert!(r.contains(msg), format!("{:?} should contain {:?}", r, msg));
+            }
+        };
+
+        testcase(
+            "http://error-dns",
+            vec![
+                "reqwest::Error",
+                "kind: Request",
+                &format!("http://error-dns/sign/{}", PUBLIC_KEY_1),
+                "hyper::Error(Connect, ConnectError",
+                "dns error",
+                "failed to lookup address information: Name or service not known",
+            ],
+        );
+
+        test_signer.shutdown();
+    }
+
+    #[test]
+    fn wrong_public_key() {
+        let (test_signer, _tmp_dir) = set_up_api_test_signer_to_sign_message();
+        let test_client = set_up_test_client(&test_signer.address);
+
+        let mut test_input = get_input_data_block(0xc137);
+        test_input.public_key = ABSENT_PUBLIC_KEY.to_string();
+
+        let signature = do_sign_request(&test_client, test_input);
+
+        match signature.unwrap_err() {
+            Error::ServerMessage(msg) => {
+                assert_eq!(msg, format!("Key not found: {}", ABSENT_PUBLIC_KEY))
+            }
+            e => panic!("{:?}", e),
+        }
+    }
+
+    #[test]
+    fn invalid_secret_key() {
+        let (test_signer, _tmp_dir) = set_up_api_test_signer_to_sign_message();
+        let test_client = set_up_test_client(&test_signer.address);
+
+        let mut test_input = get_input_data_block(0xc137);
+        test_input.public_key = PUBLIC_KEY_FOR_INVALID_SECRET_KEY.to_string();
+
+        let signature = do_sign_request(&test_client, test_input);
+
+        match signature.unwrap_err() {
+            Error::ServerMessage(msg) => assert_eq!(
+                msg,
+                format!(
+                    "Invalid secret key: public_key: {}; Invalid hex character: W at index 0",
+                    PUBLIC_KEY_FOR_INVALID_SECRET_KEY
+                )
+            ),
+            e => panic!("{:?}", e),
+        }
+    }
+
+    #[test]
+    fn key_mismatch() {
+        let (test_signer, _tmp_dir) = set_up_api_test_signer_to_sign_message();
+        let test_client = set_up_test_client(&test_signer.address);
+
+        let mut test_input = get_input_data_block(0xc137);
+        test_input.public_key = MISMATCHED_PUBLIC_KEY.to_string();
+
+        let signature = do_sign_request(&test_client, test_input);
+
+        match signature.unwrap_err() {
+            Error::ServerMessage(msg) => {
+                assert_eq!(msg, format!("Key mismatch: {}", MISMATCHED_PUBLIC_KEY))
+            }
+            e => panic!("{:?}", e),
+        }
+    }
 }
 
-// # Test Strategy (TODO)
-//
-// ## POST
-// * Bad URL (to get 404s)
-// * secret key problems
-//   * key_not_found
-//   * invalid_secret_key
-//   * key mismatch
-// * Weird status code (418)
-// * Timeout
+// # Test Strategy
 //
 // ## MOCK
+// * Timeout
+// * Weird status code (418)
 // * Bad response (use mock)
 //   * no json
 //   * missing_signing_root_in_json
