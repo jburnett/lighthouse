@@ -1,10 +1,12 @@
 mod constants;
 mod local_signer_test_data;
+mod mock;
 mod remote_signer_test_data;
 mod test_objects;
 
 pub use constants::*;
 pub use local_signer_test_data::*;
+pub use mock::*;
 use remote_signer::{Error, RemoteSignerHttpClient, RemoteSignerObject, Url};
 pub use remote_signer_test_data::*;
 use reqwest::ClientBuilder;
@@ -15,9 +17,16 @@ use types::{EthSpec, MainnetEthSpec};
 type E = MainnetEthSpec;
 
 pub fn set_up_test_client(test_signer_address: &str) -> RemoteSignerHttpClient {
+    set_up_test_client_with_timeout(test_signer_address, 12)
+}
+
+pub fn set_up_test_client_with_timeout(
+    test_signer_address: &str,
+    timeout: u64,
+) -> RemoteSignerHttpClient {
     let url: Url = test_signer_address.parse().unwrap();
     let reqwest_client = ClientBuilder::new()
-        .timeout(Duration::from_secs(12))
+        .timeout(Duration::from_secs(timeout))
         .build()
         .unwrap();
 

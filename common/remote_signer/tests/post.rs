@@ -224,18 +224,3 @@ mod post {
         }
     }
 }
-
-// # Test Strategy
-//
-// ## MOCK
-// * Timeout
-// * Weird status code (418)
-// * Bad response (use mock)
-//   * no json
-//   * missing_signing_root_in_json
-//   * json, empty_signing_root_in_json#
-//   * invalid_string_signing_root
-//   * json, signature, but extra fields (should be ignored?)
-// * We can evaluate the json payload we are sending
-// * We can instruct the mock to give lousy response, to test our resilience.
-//   * In particular, how we handle errors at the end of the `sign()` function.
