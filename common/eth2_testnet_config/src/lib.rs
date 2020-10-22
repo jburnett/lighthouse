@@ -7,10 +7,6 @@
 //!
 //! https://github.com/sigp/lighthouse/pull/605
 //!
-use eth2_config::{
-    include_altona_file, include_medalla_file, include_spadina_file, include_zinken_file, unique_id,
-};
-
 use enr::{CombinedKey, Enr};
 use ssz::{Decode, Encode};
 use std::fs::{create_dir_all, File};
@@ -36,6 +32,7 @@ pub struct HardcodedNet {
     pub genesis_state: &'static [u8],
 }
 
+#[allow(unused_macros)]
 macro_rules! define_net {
     ($mod: ident, $include_file: tt) => {{
         use eth2_config::$mod::ETH2_NET_DIR;
@@ -53,13 +50,8 @@ macro_rules! define_net {
     }};
 }
 
-const ALTONA: HardcodedNet = define_net!(altona, include_altona_file);
-const MEDALLA: HardcodedNet = define_net!(medalla, include_medalla_file);
-const SPADINA: HardcodedNet = define_net!(spadina, include_spadina_file);
-const ZINKEN: HardcodedNet = define_net!(zinken, include_zinken_file);
-
-const HARDCODED_NETS: &[HardcodedNet] = &[ALTONA, MEDALLA, SPADINA, ZINKEN];
-pub const DEFAULT_HARDCODED_TESTNET: &str = "medalla";
+const HARDCODED_NETS: &[HardcodedNet] = &[];
+pub const DEFAULT_HARDCODED_TESTNET: &str = "none";
 
 /// Specifies an Eth2 testnet.
 ///

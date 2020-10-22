@@ -80,6 +80,7 @@ macro_rules! unique_id {
     };
 }
 
+#[allow(unused_macros)]
 macro_rules! define_net {
     ($title: ident, $macro_title: tt, $name: tt, $genesis_is_known: tt) => {
         #[macro_use]
@@ -104,14 +105,6 @@ macro_rules! define_net {
         }
     };
 }
-
-define_net!(altona, include_altona_file, "altona", true);
-
-define_net!(medalla, include_medalla_file, "medalla", true);
-
-define_net!(spadina, include_spadina_file, "spadina", true);
-
-define_net!(zinken, include_zinken_file, "zinken", true);
 
 #[cfg(test)]
 mod tests {
